@@ -41,7 +41,7 @@ const MOCK_PURCHASE_ORDERS = [
 export default function PurchaseOrdersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [purchaseOrders, setPurchaseOrders] = useState(MOCK_PURCHASE_ORDERS);
+  const [purchaseOrders, setPurchaseOrders] = useState<typeof MOCK_PURCHASE_ORDERS>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -50,6 +50,26 @@ export default function PurchaseOrdersPage() {
     clientName: "",
     amount: "",
   });
+
+  // Load purchase orders from localStorage on component mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedPOs = localStorage.getItem('purchaseOrders');
+      if (savedPOs) {
+        setPurchaseOrders(JSON.parse(savedPOs));
+      } else {
+        setPurchaseOrders(MOCK_PURCHASE_ORDERS);
+        localStorage.setItem('purchaseOrders', JSON.stringify(MOCK_PURCHASE_ORDERS));
+      }
+    }
+  }, []);
+
+  // Update localStorage whenever purchase orders change
+  useEffect(() => {
+    if (typeof window !== 'undefined' && purchaseOrders.length > 0) {
+      localStorage.setItem('purchaseOrders', JSON.stringify(purchaseOrders));
+    }
+  }, [purchaseOrders]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -73,29 +93,51 @@ export default function PurchaseOrdersPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // In a real app, here we would upload the file and create the PO in the database
-    setTimeout(() => {
-      // Mock adding a new PO to the list
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Create new PO with a unique ID and current timestamp
       const newPO = {
-        id: (purchaseOrders.length + 1).toString(),
+        id: Math.random().toString(36).substr(2, 9), // Generate a unique ID
         poNumber: formData.poNumber,
         clientName: formData.clientName,
         amount: parseFloat(formData.amount),
         status: "PENDING" as POStatus,
         uploadedAt: new Date().toISOString(),
-        fileUrl: selectedFile ? URL.createObjectURL(selectedFile) : null
+        uploadedBy: session?.user?.name || "Unknown"
       };
 
-      setPurchaseOrders((prev) => [newPO, ...prev]);
+      // Add the new PO to the existing ones
+      setPurchaseOrders(prev => [newPO, ...prev]);
+      
+      // Reset form
+      setFormData({
+        poNumber: "",
+        clientName: "",
+        amount: "",
+        document: null
+      });
       setIsFormOpen(false);
-      setFormData({ poNumber: "", clientName: "", amount: "" });
-      setSelectedFile(null);
+    } catch (error) {
+      console.error("Error uploading PO:", error);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
+  };
+
+  // Add a function to handle processing a PO
+  const handleProcessPO = (poId: string) => {
+    // In a real app, this would make an API call to update the PO status
+    setPurchaseOrders(prevPOs => 
+      prevPOs.map(po => 
+        po.id === poId ? { ...po, status: "PROCESSED" as POStatus } : po
+      )
+    );
   };
 
   if (status === "loading") {
@@ -131,7 +173,7 @@ export default function PurchaseOrdersPage() {
       {isFormOpen && (
         <div className="bg-white shadow-md rounded-lg p-6 mb-8 border border-gray-200">
           <h2 className="text-lg font-semibold mb-4">Upload Purchase Order</h2>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleFormSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -226,11 +268,9 @@ export default function PurchaseOrdersPage() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Document
               </th>
-              {session?.user?.role === "ACCOUNTS" && (
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              )}
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -248,8 +288,9 @@ export default function PurchaseOrdersPage() {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                     ${po.status === "PENDING" ? "bg-yellow-100 text-yellow-800" : 
-                      po.status === "PROCESSED" ? "bg-blue-100 text-blue-800" : 
-                      "bg-green-100 text-green-800"}`}
+                      po.status === "PROCESSED" ? "bg-green-100 text-green-800" : 
+                      po.status === "INVOICED" ? "bg-blue-100 text-blue-800" : 
+                      "bg-gray-100 text-gray-800"}`}
                   >
                     {po.status}
                   </span>
@@ -271,26 +312,37 @@ export default function PurchaseOrdersPage() {
                     "No document"
                   )}
                 </td>
-                {session?.user?.role === "ACCOUNTS" && (
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    {po.status === "PROCESSED" && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="text-blue-600"
-                        onClick={() => router.push(`/invoices/new?poId=${po.id}`)}
-                      >
-                        Generate Invoice
-                      </Button>
-                    )}
-                  </td>
-                )}
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  {session?.user?.role === "OPERATIONS" && po.status === "PENDING" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleProcessPO(po.id)}
+                      className="ml-2"
+                    >
+                      Process PO
+                    </Button>
+                  )}
+                  {session?.user?.role === "ACCOUNTS" && po.status === "PROCESSED" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/invoices/new?poId=${po.id}`)}
+                      className="ml-2"
+                    >
+                      Generate Invoice
+                    </Button>
+                  )}
+                  {session?.user?.role === "ACCOUNTS" && po.status === "INVOICED" && (
+                    <span className="text-sm text-gray-500">Invoiced</span>
+                  )}
+                </td>
               </tr>
             ))}
             {purchaseOrders.length === 0 && (
               <tr>
                 <td 
-                  colSpan={session?.user?.role === "ACCOUNTS" ? 7 : 6} 
+                  colSpan={7} 
                   className="px-6 py-10 text-center text-sm text-gray-500"
                 >
                   No purchase orders found

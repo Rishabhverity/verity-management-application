@@ -44,7 +44,7 @@ const MOCK_INVOICES = [
 export default function InvoicesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [invoices, setInvoices] = useState(MOCK_INVOICES);
+  const [invoices, setInvoices] = useState<typeof MOCK_INVOICES>([]);
   const [filter, setFilter] = useState<string>("ALL");
 
   useEffect(() => {
@@ -52,6 +52,26 @@ export default function InvoicesPage() {
       router.push("/login");
     }
   }, [status, router]);
+
+  // Load invoices from localStorage on component mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedInvoices = localStorage.getItem('invoices');
+      if (savedInvoices) {
+        setInvoices(JSON.parse(savedInvoices));
+      } else {
+        setInvoices(MOCK_INVOICES);
+        localStorage.setItem('invoices', JSON.stringify(MOCK_INVOICES));
+      }
+    }
+  }, []);
+
+  // Update localStorage whenever invoices change
+  useEffect(() => {
+    if (typeof window !== 'undefined' && invoices.length > 0) {
+      localStorage.setItem('invoices', JSON.stringify(invoices));
+    }
+  }, [invoices]);
 
   // Check if user has permission to view invoices
   const canViewInvoices = session?.user?.role === "ACCOUNTS";

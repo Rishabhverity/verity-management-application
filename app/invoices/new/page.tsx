@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import { InvoiceStatus } from "@prisma/client";
 
 type PurchaseOrder = {
   id: string;
@@ -39,22 +40,17 @@ export default function NewInvoicePage() {
     }
 
     if (poId) {
-      // Fetch PO details - in real app, this would be an API call
-      // For now, using mock data
-      const mockPurchaseOrder = {
-        id: poId,
-        poNumber: `PO-2023-00${poId}`,
-        clientName: poId === "1" ? "ABC Corp" : poId === "2" ? "XYZ Ltd" : "Tech Solutions",
-        amount: poId === "1" ? 5000 : poId === "2" ? 3500 : 7500,
-        status: "PROCESSED",
-        uploadedAt: new Date().toISOString()
-      };
+      // Get PO from localStorage instead of using static mock data
+      const purchaseOrders = JSON.parse(localStorage.getItem('purchaseOrders') || '[]');
+      const foundPO = purchaseOrders.find((po: any) => po.id === poId);
       
-      setPo(mockPurchaseOrder);
-      setFormData({
-        invoiceNumber: `INV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-        notes: ""
-      });
+      if (foundPO) {
+        setPo(foundPO);
+        setFormData({
+          invoiceNumber: `INV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+          notes: ""
+        });
+      }
     }
   }, [poId, router, session, status]);
 
@@ -74,11 +70,40 @@ export default function NewInvoicePage() {
     setIsLoading(true);
     
     try {
-      // In a real app, this would be an API call to create the invoice
-      // For now, just simulate a delay and redirect
+      // Create a new invoice object with a proper random ID
+      const newInvoice = {
+        id: Math.random().toString(36).substr(2, 9), // Simple random ID for demo
+        invoiceNumber: formData.invoiceNumber,
+        poNumber: po.poNumber,
+        clientName: po.clientName,
+        amount: po.amount,
+        status: "PENDING" as InvoiceStatus,
+        generatedAt: new Date().toISOString(),
+        fileUrl: "/mock-invoice.pdf", // Mock file URL
+        notes: formData.notes
+      };
+
+      // Update the purchase order status to INVOICED
+      const purchaseOrders = JSON.parse(localStorage.getItem('purchaseOrders') || '[]');
+      const updatedPOs = purchaseOrders.map((purchaseOrder: any) => 
+        purchaseOrder.id === po.id 
+          ? { ...purchaseOrder, status: "INVOICED" } 
+          : purchaseOrder
+      );
+      localStorage.setItem('purchaseOrders', JSON.stringify(updatedPOs));
+
+      // Add the new invoice to existing invoices
+      const existingInvoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+      const updatedInvoices = [newInvoice, ...existingInvoices];
+      localStorage.setItem('invoices', JSON.stringify(updatedInvoices));
+      
+      console.log("New invoice created:", newInvoice);
+      console.log("Updated PO status to INVOICED for PO:", po.id);
+      
+      // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Redirect to invoices page after "creating" the invoice
+      // Redirect to invoices page after creating the invoice
       router.push("/invoices");
     } catch (error) {
       console.error("Error creating invoice:", error);
