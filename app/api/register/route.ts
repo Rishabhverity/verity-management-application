@@ -126,11 +126,12 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: ErrorWithMessage) {
+  } catch (error: unknown) {
     console.error("Registration error:", error);
     
+    const err = error as ErrorWithMessage;
     return NextResponse.json(
-      { error: "Failed to register user", message: error.message },
+      { error: "Failed to register user", message: err.message },
       { status: 500 }
     );
   } finally {

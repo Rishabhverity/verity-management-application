@@ -103,9 +103,10 @@ export default function RegisterPage() {
       setSpecialization("");
       setDepartment("");
       
-    } catch (err: ErrorType) {
+    } catch (err: unknown) {
       console.error("Registration error:", err);
-      setError(err.message || "An error occurred during registration");
+      const error = err as ErrorType;
+      setError(error.message || "An error occurred during registration");
     } finally {
       setIsLoading(false);
     }
