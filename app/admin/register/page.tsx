@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 
-type ErrorType = {
+// Used for typing the error object in catch block
+interface ErrorType {
   message?: string;
-};
+}
 
 export default function RegisterPage() {
   const router = useRouter();

@@ -81,8 +81,6 @@ export default function BatchForm({
 
   // Watch start date to enforce end date validation
   const startDate = watch("startDate");
-  // startTime is watched for future implementation
-  const _ = watch("startTime");
 
   // Fetch trainers from API
   useEffect(() => {
@@ -125,15 +123,6 @@ export default function BatchForm({
     }
     
     onSubmit(data);
-  };
-
-  // This function will be used for future implementation
-  const _formatTime = (time: Date) => {
-    return time.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit',
-      hour12: true 
-    });
   };
 
   return (

@@ -16,9 +16,10 @@ const registerSchema = z.object({
   department: z.string().optional(),
 });
 
-type ErrorWithMessage = {
+// Used to type errors from external sources
+interface ErrorWithMessage {
   message: string;
-};
+}
 
 export async function POST(req: NextRequest) {
   try {
