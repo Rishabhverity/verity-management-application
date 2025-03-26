@@ -82,7 +82,7 @@ export default function BatchesPage() {
   }, [status, canViewBatches]);
 
   // Handle creating or updating a batch
-  const handleSubmitBatch = (data: any) => {
+  const handleSubmitBatch = (data: Omit<Batch, 'id' | 'status' | 'traineeCount'>) => {
     setIsLoading(true);
 
     // Simulate API call

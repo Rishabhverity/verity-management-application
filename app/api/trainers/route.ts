@@ -6,7 +6,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 const prisma = new PrismaClient();
 
 // GET endpoint to fetch all trainers with their profile information
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     // Check authorization
     const session = await getServerSession(authOptions);

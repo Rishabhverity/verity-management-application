@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { POStatus, UserRole } from "@prisma/client";
+import { POStatus } from "@prisma/client";
 
 // Mock data for sample purchase orders 
 // In a real app, this would come from an API call

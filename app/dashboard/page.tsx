@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
@@ -156,7 +156,7 @@ export default function DashboardPage() {
         return (
           <div className="text-center py-12">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Welcome!</h1>
-            <p className="text-gray-700">Your role hasn't been configured yet. Please contact an administrator.</p>
+            <p className="text-gray-700">Your role hasn&apos;t been configured yet. Please contact an administrator.</p>
           </div>
         );
     }

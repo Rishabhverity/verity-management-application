@@ -16,6 +16,10 @@ const registerSchema = z.object({
   department: z.string().optional(),
 });
 
+type ErrorWithMessage = {
+  message: string;
+};
+
 export async function POST(req: NextRequest) {
   try {
     // Parse request body
@@ -121,7 +125,7 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: ErrorWithMessage) {
     console.error("Registration error:", error);
     
     return NextResponse.json(

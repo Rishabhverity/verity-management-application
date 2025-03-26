@@ -7,7 +7,6 @@ import { z } from "zod";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Button } from "@/components/ui/button";
-import { TrainingType } from "@prisma/client";
 import axios from "axios";
 
 // Define trainer type
@@ -82,7 +81,8 @@ export default function BatchForm({
 
   // Watch start date to enforce end date validation
   const startDate = watch("startDate");
-  const startTime = watch("startTime");
+  // startTime is watched for future implementation
+  const _ = watch("startTime");
 
   // Fetch trainers from API
   useEffect(() => {
@@ -105,12 +105,12 @@ export default function BatchForm({
   }, []);
 
   // Dummy data for trainees select - in a real app, fetch from API
-  const [trainees, setTrainees] = useState([
+  const trainees = [
     { id: "1", name: "John Doe" },
     { id: "2", name: "Jane Smith" },
     { id: "3", name: "Robert Johnson" },
     { id: "4", name: "Emily Davis" },
-  ]);
+  ];
 
   const handleFormSubmit = (data: BatchFormValues) => {
     // Ensure end date is not before start date
@@ -127,8 +127,8 @@ export default function BatchForm({
     onSubmit(data);
   };
 
-  // Format time for display
-  const formatTime = (time: Date) => {
+  // This function will be used for future implementation
+  const _formatTime = (time: Date) => {
     return time.toLocaleTimeString('en-US', { 
       hour: 'numeric', 
       minute: '2-digit',

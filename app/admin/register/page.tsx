@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 
+type ErrorType = {
+  message?: string;
+};
+
 export default function RegisterPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -98,7 +102,7 @@ export default function RegisterPage() {
       setSpecialization("");
       setDepartment("");
       
-    } catch (err: any) {
+    } catch (err: ErrorType) {
       console.error("Registration error:", err);
       setError(err.message || "An error occurred during registration");
     } finally {

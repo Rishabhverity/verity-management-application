@@ -45,7 +45,8 @@ const MOCK_TRAINERS = [
 export default function TrainersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [trainers, setTrainers] = useState(MOCK_TRAINERS);
+  // Using trainers but keeping setTrainers for future implementation
+  const [trainers] = useState(MOCK_TRAINERS);
   const [searchQuery, setSearchQuery] = useState("");
   const [availabilityFilter, setAvailabilityFilter] = useState<boolean | null>(null);
 

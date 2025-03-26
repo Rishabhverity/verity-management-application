@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     });
     
     // Return response without password
-    const { password: _, ...userWithoutPassword } = newUser;
+    const { password: _password, ...userWithoutPassword } = newUser;
     
     return NextResponse.json(userWithoutPassword, { status: 201 });
     
